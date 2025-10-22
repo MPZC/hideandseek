@@ -10,7 +10,7 @@ Moduły:
 
 import numpy as np
 from PIL import Image
-from mess_preparation import convertToBinary, convertToString
+from .mess_preparation import convertToBinary, convertToString
 
 class Lsb:
     # Konwertuje obraz do macierzy numpy w celu manipulacji pikselami

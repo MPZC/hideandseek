@@ -4,71 +4,66 @@
     <meta charset="UTF-8">
     <title>steg.pics</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            background: #f0f0f0;
-            margin-top: 50px;
-        }
-        h1 {
-            color: #333;
-        }
-        .upload-box {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            display: inline-block;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        input[type=file] {
-            margin-top: 10px;
-        }
-        .btn {
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: #007bff;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        .btn:hover {
-            background: #0056b3;
-        }
-        .flash {
-            color: red;
-            margin-top: 10px;
-        }
+        body { font-family: Arial, sans-serif; text-align: center; background: #f0f0f0; margin-top: 50px; }
+        h1 { color: #333; }
+        .upload-box { background: white; padding: 30px; border-radius: 15px; display: inline-block; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input[type=file], textarea { margin-top: 10px; width: 300px; }
+        .btn { margin-top: 15px; padding: 10px 20px; background: #007bff; border: none; color: white; border-radius: 8px; cursor: pointer; }
+        .btn:hover { background: #0056b3; }
+        .flash { color: red; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <h1>🧩 steg.pics</h1>
-    <div class="upload-box">
-        <form method="POST" enctype="multipart/form-data">
-            <p>Wrzuć swój obrazek (.png):</p>
-            <input type="file" name="file" accept=".png" required>
-            <br>
-            <button type="submit" class="btn">Prześlij</button>
-        </form>
+<h1>🧩 steg.pics</h1>
 
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <div class="flash">
-                {% for message in messages %}
-                    <p>{{ message }}</p>
-                {% endfor %}
-            </div>
-        {% endif %}
-        {% endwith %}
+<div class="upload-box">
+    <!-- Encoding form -->
+    <h3>Kodowanie wiadomości w obrazie</h3>
+    <form method="POST" enctype="multipart/form-data">
+        <p>Wybierz obraz (.png):</p>
+        <input type="file" name="file" accept=".png" required><br>
+        <p>Wpisz wiadomość do ukrycia:</p>
+        <textarea name="hidden_message" rows="4" placeholder="Twoja wiadomość..." required></textarea><br>
+        <button type="submit" class="btn" name="action" value="encode">Koduj</button>
+    </form>
 
-        {% if processed_filename %}
-            <hr>
-            <p>Obraz został przetworzony!</p>
-            <img src="{{ url_for('static', filename='img/' + processed_filename) }}" width="300" alt="Wynik"><br>
-            <a href="{{ url_for('download_file', filename=processed_filename) }}" class="btn">Pobierz</a>
-        {% endif %}
-    </div>
+    <hr>
+
+    <!-- Decoding form -->
+    <h3>Odczytanie wiadomości z obrazu</h3>
+    <form method="POST" enctype="multipart/form-data">
+        <p>Wybierz obraz (.png) z zakodowaną wiadomością:</p>
+        <input type="file" name="file" accept=".png" required><br>
+        <button type="submit" class="btn" name="action" value="decode">Dekoduj</button>
+    </form>
+
+    <!-- Alerts -->
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        <div class="flash">
+            {% for message in messages %}
+                <p>{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Processed image in small version -->
+    {% if processed_filename %}
+        <hr>
+        <p>Obraz został przetworzony!</p>
+        <img src="{{ url_for('static', filename='img/' + processed_filename) }}" width="300" alt="Wynik"><br>
+        <a href="{{ url_for('download_file', filename=processed_filename) }}" class="btn">Pobierz</a>
+    {% endif %}
+
+    <!-- Showing original message -->
+    {% if decoded_message %}
+        <hr>
+        <p><strong>Odkodowana wiadomość:</strong></p>
+        <p>{{ decoded_message }}</p>
+    {% endif %}
+</div>
 
 </body>
 </html>
