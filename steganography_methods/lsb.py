@@ -80,7 +80,7 @@ class Lsb:
         return message
 
 
-    def codeMessageLSB(self, path, message):
+    def codeMessage(self, path, message):
         message_in_binary = convertToBinary(message)
         _, img = self.convertImage(path)
         if len(message_in_binary) > (img.size):
@@ -89,7 +89,7 @@ class Lsb:
         return stego_img
 
 
-    def decodeMessageLSB(self, path):
+    def decodeMessage(self, path):
         mess = convertToString(self.lsbDecoding(path))
         # print(mess[:2])
         if mess[:2] != '**':
@@ -102,9 +102,9 @@ if __name__ == '__main__':
     message = 'Hello World!'
     path = 'path_to_image'
     stego_path = 'path_to_setgo_image'
-    stego_img = lsb.codeMessageLSB(path, message)
+    stego_img = lsb.codeMessage(path, message)
     stego_img.save(stego_path)
 
-    print(lsb.decodeMessageLSB(stego_path))
+    print(lsb.decodeMessage(stego_path))
 
 
