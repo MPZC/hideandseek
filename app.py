@@ -1,25 +1,40 @@
-from flask import Flask, render_template, request, send_from_directory, flash
-import os
+from flask import Flask, render_template, request, send_file, flash
+from io import BytesIO
 from werkzeug.utils import secure_filename
 from steganography_methods.lsb import Lsb
+from PIL import Image
+import tempfile
+import os
 
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-UPLOAD_FOLDER = "static/img"
 ALLOWED_EXTENSIONS = {"png"}
 MAX_FILE_SIZE_MB = 5
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
+# przechowywanie obrazu w pamięci
+tmp = None
+processed = False
 
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+@app.before_request
+def clear_tmp_before_request():
+    """Czyści bufor przed nowym żądaniem GET (z wyjątkiem /download)."""
+    global tmp, processed
+    if request.method == "GET" and request.endpoint not in ["download_file", "static"]:
+        tmp = None
+        processed = False
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
-    processed_filename = None
+    global tmp, processed
     decoded_message = None
+    processed = False
 
     if request.method == "POST":
         action = request.form.get("action")
@@ -33,6 +48,7 @@ def index():
             return render_template("index.html")
 
         if file and allowed_file(file.filename):
+            # sprawdzenie rozmiaru pliku
             file.seek(0, os.SEEK_END)
             file_size = file.tell() / (1024 * 1024)
             file.seek(0)
@@ -40,45 +56,70 @@ def index():
                 flash(f"Plik jest za duży! Maksymalny rozmiar: {MAX_FILE_SIZE_MB} MB.")
                 return render_template("index.html")
 
-            #Saving file
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-            file.save(filepath)
-
             lsb = Lsb()
 
             try:
+                # zapis pliku tymczasowego
+                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_in:
+                    file.save(tmp_in)
+                    tmp_in_path = tmp_in.name
+
                 if action == "encode":
                     hidden_message = request.form.get("hidden_message", "").strip()
                     if not hidden_message:
                         flash("Wiadomość nie może być pusta!")
+                        os.remove(tmp_in_path)
                         return render_template("index.html")
 
-                    hidden_message = "**" + hidden_message  # prefix for decoding
-                    stego_img = lsb.codeMessageLSB(filepath, hidden_message)
-                    processed_filename = f"stego_{filename.rsplit('.',1)[0]}.png"
-                    stego_img.save(os.path.join(app.config["UPLOAD_FOLDER"], processed_filename), format="PNG")
+                    hidden_message = "**" + hidden_message
+                    stego_img = lsb.codeMessageLSB(tmp_in_path, hidden_message)
+
+                    # zapis do pamięci
+                    tmp = BytesIO()
+                    stego_img.save(tmp, format="PNG")
+                    tmp.seek(0)
+                    processed = True
+
                     flash("Obraz został zakodowany pomyślnie.")
+                    os.remove(tmp_in_path)
 
                 elif action == "decode":
-                    decoded_message = lsb.decodeMessageLSB(filepath)
+                    decoded_message = lsb.decodeMessageLSB(tmp_in_path).lstrip("*")
                     flash("Wiadomość została odczytana pomyślnie.")
+                    os.remove(tmp_in_path)
+
             except Exception as e:
+                try:
+                    os.remove(tmp_in_path)
+                except Exception:
+                    pass
                 flash(f"Błąd: {str(e)}")
 
         else:
             flash("Dozwolone są tylko pliki .png.")
 
     return render_template("index.html",
-                           processed_filename=processed_filename,
-                           decoded_message=decoded_message)
+                           decoded_message=decoded_message,
+                           processed=processed)
 
 
-@app.route("/download/<filename>")
-def download_file(filename):
-    return send_from_directory(app.config["UPLOAD_FOLDER"], filename, as_attachment=True)
+@app.route("/download")
+def download_file():
+    global tmp
+    if tmp is None:
+        flash("Brak pliku do pobrania.")
+        return render_template("index.html")
+    tmp.seek(0)
+    return send_file(
+        tmp,
+        mimetype="image/png",
+        as_attachment=True,
+        download_name="stego_image.png"
+    )
 
 
 if __name__ == "__main__":
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.run(debug=True)
+    tmp = None
+    processed = False
+    port = 8080
+    app.run(debug=True, host="0.0.0.0", port=port)

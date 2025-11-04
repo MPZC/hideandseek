@@ -49,15 +49,14 @@
     {% endif %}
     {% endwith %}
 
-    <!-- Processed image in small version -->
-    {% if processed_filename %}
+    <!-- Show download button if image was encoded -->
+    {% if processed %}
         <hr>
-        <p>Obraz został przetworzony!</p>
-        <img src="{{ url_for('static', filename='img/' + processed_filename) }}" width="300" alt="Wynik"><br>
-        <a href="{{ url_for('download_file', filename=processed_filename) }}" class="btn">Pobierz</a>
+        <p><strong>Obraz został zakodowany pomyślnie!</strong></p>
+        <a href="{{ url_for('download_file') }}" class="btn">Pobierz obraz</a>
     {% endif %}
 
-    <!-- Showing original message -->
+    <!-- Showing decoded message -->
     {% if decoded_message %}
         <hr>
         <p><strong>Odkodowana wiadomość:</strong></p>
