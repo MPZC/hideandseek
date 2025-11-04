@@ -54,7 +54,7 @@ def index():
                         flash("Wiadomość nie może być pusta!")
                         return render_template("index.html")
 
-                    hidden_message = "**" + hidden_message  # prefiks dla dekodowania
+                    hidden_message = "**" + hidden_message  # prefix for decoding
                     stego_img = lsb.codeMessageLSB(filepath, hidden_message)
                     processed_filename = f"stego_{filename.rsplit('.',1)[0]}.png"
                     stego_img.save(os.path.join(app.config["UPLOAD_FOLDER"], processed_filename), format="PNG")
