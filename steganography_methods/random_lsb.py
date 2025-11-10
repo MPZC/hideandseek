@@ -30,9 +30,25 @@ class RandomLsb:
     - Obliczony krok.
     '''
     def calculateStep(self, message_size, img):
-        if (message_size*7+34) > (img.size-10):
-            raise ValueError("The message is too long to encode in this picture")
-        return (img.size - 10) // (message_size*7+34)
+        available = img.size - 11
+        if (message_size) > available:
+            max_chars = available // 7  # bo 7 bitów = 1 znak
+            raise ValueError(
+                f"Message is too long for this photo!\n"
+                f"Max message length are: {max_chars} chars ({available} bits), "
+                f"And you try to encode {message_size // 7} chars ({message_size} bits)."
+            )
+        
+        step = max(1, available // message_size)
+
+        if step > 1023:
+            raise ValueError(
+                f"The message is too short. The step is {step}, "
+                "the max step is 1024.\n"
+                "Try to use longer message or smaller picture."
+            )
+
+        return step
 
 
     '''Koduje wiadomość w obrazie poprzez zmianę najmniej znaczących bitów wybranych pikseli.
@@ -110,31 +126,31 @@ class RandomLsb:
         return message 
 
 
-    def codeMessage(self, path, message):
+    def codeMessage(self, path, message, password):
         _, img = self.convertImage(path)
-        cal_step = self.calculateStep(len(message), img)
-        message_in_binary= convertToBinary(message, cal_step)
+        temp_binary = convertToBinary(message, password)  # Message without step
+        cal_step = self.calculateStep(len(temp_binary), img) # Calculate step with number od bites
+        message_in_binary= convertToBinary(message, password, cal_step)
         _, stego_img = self.rlsbCoding(img, message_in_binary, cal_step)
         return stego_img
 
 
-    def decodeMessage(self, path):
-        # print("Odczytywanie wiadomości: ")
-        mess = convertToString(self.rlsbDecoding(path))
-        if mess[:2] != '**':
-            raise ValueError
+    def decodeMessage(self, path, password):
+        mess = convertToString(self.rlsbDecoding(path), password)
         print(f"Message: {mess}")
         return mess[2:]
 
 
 if __name__ == '__main__':
-    message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum dignissim urna eget egestas porta. Aenean eget eros dapibus, fringilla nisi vel, tincidunt ex. Integer vitae vulputate nisi. Cras egestas sem lorem, vel maximus metus ultricies ac. Praesent lobortis egestas dignissim. Etiam porttitor faucibus erat. Curabitur dapibus sem at faucibus facilisis.Maecenas congue odio sed ultricies consectetur. Nullam venenatis orci ac diam maximus, nec elementum erat fermentum. Nullam nisl nibh, luctus id blandit at, luctus eu purus. Duis ultrices, velit eu consequat semper, arcu nisl dapibus elit, commodo egestas ante odio vitae justo. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Suspendisse libero lectus, condimentum a eleifend pellentesque, ultrices a mi. Nam eu mi vehicula, porttitor eros varius, dictum justo. In fringilla vel purus eu ultrices."
-    path = 'path_to_img'
-    stegano_path = 'path_to_steagno_img'
+    message = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum dignissim urna eget egestas porta. Aenean eget eros dapibus, fringilla nisi vel, tincidunt ex. Integer vitae vulputate nisi. Cras egestas sem lorem, vel maximus metus ultricies ac. Praesent lobortis egestas dignissim. Etiam porttitor faucibus erat. Curabitur dapibus sem at faucibus facilisis."
+    message2 = "Hello World!"
+    password = 'Haslo123'
+    path = 'path_to_image'
+    stegano_path = 'path_to_stego_image'
 
     rlsb = RandomLsb()
-    stego_img = rlsb.codeMessageRandomLSB(path, message)
+    stego_img = rlsb.codeMessage(path, message2, password)
     stego_img.save(stegano_path)
-    rlsb.decodeMessageRandomLSB(stegano_path)
+    rlsb.decodeMessage(stegano_path, password)
 
 
