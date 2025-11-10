@@ -3,10 +3,11 @@ import json
 import numpy as np
 from PIL import Image
 from collections import defaultdict
+from mess_preparation import encryptMessage, decryptMessage
 
 class Huffman:
 
-    def build_huffman_tree(self, message):
+    def buildHuffmanTree(self, message):
         frequency = defaultdict(int)
         for char in message:
             frequency[char] += 1
@@ -31,11 +32,11 @@ class Huffman:
         return huffman_codes
 
 
-    def compress_message(self, message, huffman_codes):
+    def compressMessage(self, message, huffman_codes):
         return ''.join([huffman_codes[char] for char in message])
 
 
-    def decompress_message(self, binary_message, huffman_codes):
+    def decompressMessage(self, binary_message, huffman_codes):
         reverse_huffman_codes = {v: k for k, v in huffman_codes.items()}
         current_code = ""
         decoded_message = ""
@@ -56,8 +57,8 @@ class Huffman:
         pixel = 0
 
         # Huffman coding
-        huffman_codes = self.build_huffman_tree(message)
-        compressed_message = self.compress_message(message, huffman_codes)
+        huffman_codes = self.buildHuffmanTree(message)
+        compressed_message = self.compressMessage(message, huffman_codes)
         huffman_json = json.dumps(huffman_codes)
         huffman_bin = ''.join(f"{ord(c):08b}" for c in huffman_json)
         huffman_len_bin = bin(len(huffman_bin))[2:].zfill(20)  # długość słownika
@@ -123,23 +124,28 @@ class Huffman:
         return compressed_message, huffman_codes
 
 
-    def decodeMessage(self, stego_path):
+    def decodeMessage(self, stego_path, password):
+        
         compressed_message, huffman_codes = self.huffmanDecoding(stego_path)
-        decoded_message = self.decompress_message(compressed_message, huffman_codes)
+        decoded_message = self.decompressMessage(compressed_message, huffman_codes)
+        decrypted_message = decryptMessage(decoded_message, password)
+        # print(decoded_message, decrypted_message)
+        return decrypted_message
 
-        return decoded_message
 
-
-    def codeMessage(self, path, message):
+    def codeMessage(self, path, message, password):
+        encrypted_message = encryptMessage(message, password)
         img = np.array(Image.open(path))
-        _, stego_img = self.huffmanCoding(img, message)
+        _, stego_img = self.huffmanCoding(img, encrypted_message)
         return stego_img
+
 
 if __name__ == '__main__':
     huff = Huffman()
     message = 'Hello World!'
-    path = 'path_to_img'
-    stego_path = 'path_to_stego_img'
-    stego_img = huff.codeMessage(path, message)
+    password = 'Haslo123'
+    path = 'path_to_photo'
+    stego_path = 'path_to_stego_photo'
+    stego_img = huff.codeMessage(path, message, password)
     stego_img.save(stego_path)
-    print("Odkodowana wiadomość:", huff.decodeMessage(stego_path))
+    print("Decoded message:", huff.decodeMessage(stego_path, password))

@@ -1,3 +1,7 @@
+import base64
+import hashlib
+import binascii
+from cryptography.fernet import Fernet
 
 def convertToBinary(message, step=None):
     # print(f"Kodowanie wiadomości: {message}")
@@ -35,4 +39,25 @@ def convertToString(message_in_binary):
         message += i
 
     return message
+
+
+def generateKeyFromPassword(password):
+    # 32-bajt key (for Fernet)
+    digest = hashlib.sha256(password.encode()).digest()
+    return base64.urlsafe_b64encode(digest)
+
+
+def encryptMessage(message, password):
+    key = generateKeyFromPassword(password)
+    fernet = Fernet(key)
+    encrypted = fernet.encrypt(message.encode())
+    return encrypted.decode()
+
+
+def decryptMessage(encrypted_message, password):
+    key = generateKeyFromPassword(password)
+    fernet = Fernet(key)
+    decrypted = fernet.decrypt(encrypted_message.encode())
+    return decrypted.decode()
+
 
