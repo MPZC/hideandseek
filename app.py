@@ -35,31 +35,32 @@ def index():
     global tmp, processed
     decoded_message = None
     processed = False
+    mode = "encode"
 
     if request.method == "POST":
         action = request.form.get("action")
+        mode = action
+
         if "file" not in request.files:
-            flash("Nie wybrano pliku.")
-            return render_template("index.html")
+            flash("Nie wybrano pliku.", "error")
+            return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
         file = request.files["file"]
         if file.filename == "":
-            flash("Nie wybrano pliku.")
-            return render_template("index.html")
+            flash("Nie wybrano pliku.", "error")
+            return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
         if file and allowed_file(file.filename):
-            # sprawdzenie rozmiaru pliku
             file.seek(0, os.SEEK_END)
             file_size = file.tell() / (1024 * 1024)
             file.seek(0)
             if file_size > MAX_FILE_SIZE_MB:
-                flash(f"Plik jest za duży! Maksymalny rozmiar: {MAX_FILE_SIZE_MB} MB.")
-                return render_template("index.html")
+                flash(f"Plik jest za duży! Maksymalny rozmiar: {MAX_FILE_SIZE_MB} MB.", "error")
+                return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
             lsb = Lsb()
 
             try:
-                # zapis pliku tymczasowego
                 with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_in:
                     file.save(tmp_in)
                     tmp_in_path = tmp_in.name
@@ -67,25 +68,24 @@ def index():
                 if action == "encode":
                     hidden_message = request.form.get("hidden_message", "").strip()
                     if not hidden_message:
-                        flash("Wiadomość nie może być pusta!")
+                        flash("Wiadomość nie może być pusta!", "error")
                         os.remove(tmp_in_path)
-                        return render_template("index.html")
+                        return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
                     hidden_message = "**" + hidden_message
                     stego_img = lsb.codeMessageLSB(tmp_in_path, hidden_message)
 
-                    # zapis do pamięci
                     tmp = BytesIO()
                     stego_img.save(tmp, format="PNG")
                     tmp.seek(0)
                     processed = True
 
-                    flash("Obraz został zakodowany pomyślnie.")
+                    flash("Obraz został zakodowany pomyślnie.", "success")
                     os.remove(tmp_in_path)
 
                 elif action == "decode":
                     decoded_message = lsb.decodeMessageLSB(tmp_in_path).lstrip("*")
-                    flash("Wiadomość została odczytana pomyślnie.")
+                    flash("Wiadomość została odczytana pomyślnie.", "success")
                     os.remove(tmp_in_path)
 
             except Exception as e:
@@ -93,21 +93,22 @@ def index():
                     os.remove(tmp_in_path)
                 except Exception:
                     pass
-                flash(f"Błąd: {str(e)}")
+                flash(f"Błąd: {str(e)}", "error")
 
         else:
-            flash("Dozwolone są tylko pliki .png.")
+            flash("Dozwolone są tylko pliki .png.", "error")
 
     return render_template("index.html",
                            decoded_message=decoded_message,
-                           processed=processed)
+                           processed=processed,
+                           mode=mode)
 
 
 @app.route("/download")
 def download_file():
     global tmp
     if tmp is None:
-        flash("Brak pliku do pobrania.")
+        flash("Brak pliku do pobrania.", "error")
         return render_template("index.html")
     tmp.seek(0)
     return send_file(

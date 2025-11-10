@@ -1,0 +1,337 @@
+/* ==========================
+   VARIABLES / RESET
+========================== */
+:root {
+    --color-bg-dark: #0f172a;
+    --color-bg-mid: #0b1220;
+    --color-primary-gradient: linear-gradient(90deg,#06b6d4,#7c3aed);
+    --color-text: #e6eef8;
+    --color-text-muted: rgba(230,238,248,0.75);
+    --color-success-bg: #f0fdf4;
+    --color-success-border: #d1f5d9;
+    --color-success-text: #054e24;
+    --color-error-bg: #fff5f5;
+    --color-error-border: #ffd6d6;
+    --color-error-text: #7a1f1f;
+    --font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    height: 100%;
+    font-family: var(--font-family);
+    color: var(--color-text);
+    background: var(--color-bg-dark);
+}
+
+/* ==========================
+   LAYOUT
+========================== */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.site-header,
+.site-footer {
+    width: 100%;
+    background: rgba(255,255,255,0.03);
+    padding: 18px 20px;
+    text-align: center;
+}
+
+.brand-text h1 {
+    font-size: 1.35rem;
+    color: #fff;
+}
+
+.logo-min,
+.logo-footer {
+    height: 48px;
+    width: auto;
+}
+
+.page-main {
+    flex: 1;
+    display: flex;
+    justify-content: center; 
+    align-items: center;  
+    padding: 20px;
+}
+
+.content {
+    max-width: 600px;
+    width: 100%;
+}
+
+/* ---------- HEADER ---------- */
+.header-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.brand-text {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ---------- FOOTER ---------- */
+.footer-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* ---------- CONTROLS / MODE SWITCH ---------- */
+.controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.mode {
+    position: relative;
+    width: 56px;
+    height: 32px;
+    display: inline-block;
+}
+
+.mode input {
+    display: none;
+}
+
+.mode-slider {
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: #1f2937;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+}
+
+.mode-slider:before {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.25s ease;
+}
+
+.mode input:checked + .mode-slider {
+    background: var(--color-primary-gradient);
+}
+
+.mode input:checked + .mode-slider:before {
+    transform: translateX(24px);
+}
+
+#modeLabel {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+/* ---------- PANELS ---------- */
+.panel {
+    display: none;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+    margin-bottom: 20px;
+}
+
+.panel.active {
+    display: block;
+}
+
+.panel h2 {
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+/* ---------- FORM FIELDS ---------- */
+.form .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.label {
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+}
+
+input[type=file],
+select,
+textarea {
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,0.03);
+    background: rgba(255,255,255,0.02);
+    color: #fff;
+    font-size: 0.95rem;
+}
+
+textarea {
+    min-height: 110px;
+    resize: vertical;
+}
+
+/* ---------- BUTTONS ---------- */
+.actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.btn {
+    padding: 10px 16px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.18s, background 0.2s;
+}
+
+.btn.primary {
+    background: var(--color-primary-gradient);
+    color: #fff;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+}
+
+/* ---------- FLASH MESSAGES ---------- */
+.flash-list {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.flash {
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.flash-success {
+    background: var(--color-success-bg);
+    border: 1px solid var(--color-success-border);
+    color: var(--color-success-text);
+}
+
+.flash-error {
+    background: var(--color-error-bg);
+    border: 1px solid var(--color-error-border);
+    color: var(--color-error-text);
+}
+
+.flash-decoded {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.03);
+    color: var(--color-text);
+    padding: 14px;
+}
+
+.decoded-text {
+    margin-top: 8px;
+    font-size: 0.95rem;
+    color: #cff0ff;
+    white-space: pre-wrap;
+}
+
+/* ---------- NOTICE CARD ---------- */
+.notice-card {
+    background: linear-gradient(180deg, rgba(6,182,212,0.15), rgba(124,58,237,0.15));
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 600px;
+    text-align: center;
+    color: #e6eef8;
+}
+
+.notice-header {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+}
+
+.notice-body p {
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+}
+
+.notice-body .btn {
+    display: inline-block;
+    margin-bottom: 8px;
+}
+
+/* ---------- INFO / FOOTER ---------- */
+.info {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.02);
+    color: var(--color-text-muted);
+}
+
+.info h3 {
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.site-footer {
+    border-top: 1px solid rgba(255,255,255,0.02);
+    padding: 22px 20px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.00));
+    text-align: center;
+}
+
+.footer-text p {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 880px) {
+    .content {
+        width: 90%;
+    }
+    .brand-text h1 {
+        font-size: 1.1rem;
+    }
+    .logo-footer {
+        height: 48px;
+    }
+}
