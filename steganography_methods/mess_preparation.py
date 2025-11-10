@@ -3,9 +3,10 @@ import hashlib
 import binascii
 from cryptography.fernet import Fernet
 
-def convertToBinary(message, step=None):
+def convertToBinary(message, password, step=None):
+    encrypted_message = encryptMessage(message, password)
     # print(f"Kodowanie wiadomości: {message}")
-    message = "**" + message
+    message = "**" + encrypted_message
     table_of_bin = []
     len_of_message = (len(message)*7)
     # print(len_of_message)
@@ -28,7 +29,7 @@ def convertToBinary(message, step=None):
     return message_in_binary
 
 
-def convertToString(message_in_binary):
+def convertToString(message_in_binary, password):
     # print(f"Message in binary: {message_in_binary}")
     table_of_strings = []
     message = ""
@@ -37,8 +38,13 @@ def convertToString(message_in_binary):
 
     for i in table_of_strings:
         message += i
+    
+    if message[:2] != '**':
+        raise ValueError
+    
+    decrypted_message = decryptMessage(message[2:], password)
 
-    return message
+    return decrypted_message
 
 
 def generateKeyFromPassword(password):

@@ -80,8 +80,8 @@ class Lsb:
         return message
 
 
-    def codeMessage(self, path, message):
-        message_in_binary = convertToBinary(message)
+    def codeMessage(self, path, message, password):
+        message_in_binary = convertToBinary(message, password)
         _, img = self.convertImage(path)
         if len(message_in_binary) > (img.size):
             raise Exception("The message is too long to encode in this image")
@@ -89,22 +89,20 @@ class Lsb:
         return stego_img
 
 
-    def decodeMessage(self, path):
-        mess = convertToString(self.lsbDecoding(path))
-        # print(mess[:2])
-        if mess[:2] != '**':
-            raise ValueError
-        return mess[2:]
+    def decodeMessage(self, path, password):
+        mess = convertToString(self.lsbDecoding(path), password)        
+        return mess
 
 
 if __name__ == '__main__':
     lsb = Lsb()
     message = 'Hello World!'
-    path = 'path_to_image'
-    stego_path = 'path_to_setgo_image'
-    stego_img = lsb.codeMessage(path, message)
+    password = 'Haslo123'
+    path = "path_to_image"
+    stego_path = "path_to_stego_image"
+    stego_img = lsb.codeMessage(path, message, password)
     stego_img.save(stego_path)
 
-    print(lsb.decodeMessage(stego_path))
+    print(lsb.decodeMessage(stego_path, password))
 
 
