@@ -42,12 +42,12 @@ def index():
         mode = action
 
         if "file" not in request.files:
-            flash("Nie wybrano pliku.", "error")
+            flash("No file", "error")
             return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
         file = request.files["file"]
         if file.filename == "":
-            flash("Nie wybrano pliku.", "error")
+            flash("No file", "error")
             return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
         if file and allowed_file(file.filename):
@@ -55,7 +55,7 @@ def index():
             file_size = file.tell() / (1024 * 1024)
             file.seek(0)
             if file_size > MAX_FILE_SIZE_MB:
-                flash(f"Plik jest za duży! Maksymalny rozmiar: {MAX_FILE_SIZE_MB} MB.", "error")
+                flash(f"File too big! Max size: {MAX_FILE_SIZE_MB} MB.", "error")
                 return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
             lsb = Lsb()
@@ -68,7 +68,7 @@ def index():
                 if action == "encode":
                     hidden_message = request.form.get("hidden_message", "").strip()
                     if not hidden_message:
-                        flash("Wiadomość nie może być pusta!", "error")
+                        flash("Message con't be empty", "error")
                         os.remove(tmp_in_path)
                         return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
 
@@ -80,23 +80,31 @@ def index():
                     tmp.seek(0)
                     processed = True
 
-                    flash("Obraz został zakodowany pomyślnie.", "success")
+                    flash("Image encoded correctly", "success")
                     os.remove(tmp_in_path)
 
                 elif action == "decode":
                     decoded_message = lsb.decodeMessageLSB(tmp_in_path).lstrip("*")
-                    flash("Wiadomość została odczytana pomyślnie.", "success")
+
+                    if not decoded_message.strip():
+                        decoded_message = "Nothing was hidden"
+                        flash("Nothing was hidden", "info")
+                    else:
+                        flash("Message decoded correctly.", "success")
+
                     os.remove(tmp_in_path)
+
 
             except Exception as e:
                 try:
                     os.remove(tmp_in_path)
                 except Exception:
                     pass
-                flash(f"Błąd: {str(e)}", "error")
+                error_message = str(e) if str(e).strip() else "Unknown decoding error"
+                flash(f"Error: {error_message}", "error")
 
         else:
-            flash("Dozwolone są tylko pliki .png.", "error")
+            flash("Only .png files allowed.", "error")
 
     return render_template("index.html",
                            decoded_message=decoded_message,
@@ -108,7 +116,7 @@ def index():
 def download_file():
     global tmp
     if tmp is None:
-        flash("Brak pliku do pobrania.", "error")
+        flash("No file to download", "error")
         return render_template("index.html")
     tmp.seek(0)
     return send_file(
