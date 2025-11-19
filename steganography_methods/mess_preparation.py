@@ -2,6 +2,10 @@ import base64
 import hashlib
 import binascii
 from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
+import os
 
 def convertToBinary(message, password, step=None):
     encrypted_message = encryptMessage(message, password)
@@ -47,23 +51,35 @@ def convertToString(message_in_binary, password):
     return decrypted_message
 
 
-def generateKeyFromPassword(password):
-    # 32-bajt key (for Fernet)
-    digest = hashlib.sha256(password.encode()).digest()
-    return base64.urlsafe_b64encode(digest)
+def generateKeyFromPassword(password, salt, iterations=100000):
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,
+        salt=salt,
+        iterations=iterations,
+        backend=default_backend()
+    )
+    key = kdf.derive(password.encode())
+    return base64.urlsafe_b64encode(key)
 
 
 def encryptMessage(message, password):
-    key = generateKeyFromPassword(password)
+    salt = os.urandom(16)
+    key = generateKeyFromPassword(password, salt)
     fernet = Fernet(key)
     encrypted = fernet.encrypt(message.encode())
-    return encrypted.decode()
+    # Store salt + encrypted data together, base64 encode for transport
+    encrypted_out = base64.urlsafe_b64encode(salt + encrypted)
+    return encrypted_out.decode()
 
 
 def decryptMessage(encrypted_message, password):
-    key = generateKeyFromPassword(password)
+    encrypted_data = base64.urlsafe_b64decode(encrypted_message.encode())
+    salt = encrypted_data[:16]
+    ciphertext = encrypted_data[16:]
+    key = generateKeyFromPassword(password, salt)
     fernet = Fernet(key)
-    decrypted = fernet.decrypt(encrypted_message.encode())
+    decrypted = fernet.decrypt(ciphertext)
     return decrypted.decode()
 
 
