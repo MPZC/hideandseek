@@ -12,7 +12,6 @@ app.secret_key = "supersecretkey"
 ALLOWED_EXTENSIONS = {"png"}
 MAX_FILE_SIZE_MB = 5
 
-# przechowywanie obrazu w pamięci
 tmp = None
 processed = False
 
@@ -38,13 +37,8 @@ def index():
     """
     global tmp, processed
 
-    # -------------------------
-    #        GET (tryb)
-    # -------------------------
     if request.method == "GET":
-        # odczytaj tryb z query param lub ustaw domyślny
         mode = request.args.get("mode", "encode")
-        # resetuj stan przy wejściu GET (odświeżenie/zmiana trybu)
         reset_state()
         session["mode"] = mode
         return render_template(
@@ -54,22 +48,16 @@ def index():
             mode=mode
         )
 
-    # -------------------------
-    #        POST (operacja)
-    # -------------------------
     decoded_message = None
     processed = False
 
-    # oczekujemy pola action w formie (encode|decode)
     mode = request.form.get("action", "encode")
 
-    # jeśli w sesji był inny tryb -> zresetuj, to zabezpieczenie
     previous_mode = session.get("mode")
     session["mode"] = mode
     if previous_mode and previous_mode != mode:
         reset_state()
 
-    # WALIDACJA PLIKU
     if "file" not in request.files:
         flash("No file provided.", "error")
         return render_template("index.html", decoded_message=None, processed=False, mode=mode)
@@ -80,7 +68,6 @@ def index():
         return render_template("index.html", decoded_message=None, processed=False, mode=mode)
 
     if file and allowed_file(file.filename):
-        # Sprawdzenie rozmiaru
         file.seek(0, os.SEEK_END)
         file_size = file.tell() / (1024 * 1024)
         file.seek(0)
@@ -91,7 +78,6 @@ def index():
         lsb = Lsb()
 
         try:
-            # zapisujemy obraz tymczasowo
             with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_in:
                 file.save(tmp_in)
                 tmp_in_path = tmp_in.name
@@ -106,7 +92,6 @@ def index():
                 hidden_message = "**" + hidden_message
                 stego_img = lsb.codeMessageLSB(tmp_in_path, hidden_message)
 
-                # zapis do pamięci (BytesIO)
                 tmp = BytesIO()
                 stego_img.save(tmp, format="PNG")
                 tmp.seek(0)
@@ -136,7 +121,6 @@ def index():
     else:
         flash("Only .png files allowed.", "error")
 
-    # renderuj stronę z aktualnym stanem (jeśli processed True -> pokaż download)
     return render_template(
         "index.html",
         decoded_message=decoded_message,
@@ -150,7 +134,6 @@ def download_file():
     global tmp
     if tmp is None:
         flash("No file to download", "error")
-        # przy braku pliku przekieruj do strony (GET) — wróci do domyślnego/ustawionego trybu
         return redirect(url_for("index", mode=session.get("mode", "encode")))
 
     tmp.seek(0)
