@@ -45,6 +45,7 @@
             <select name="method" id="method-encode" required>
               <option value="lsb" {% if method=='lsb' %}selected{% endif %}>LSB (Least Significant Bit)</option>
               <option value="huffman" {% if method=='huffman' %}selected{% endif %}>Huffman Coding</option>
+              <option value="random_lsb" {% if method=='random_lsb' %}selected{% endif %}>LSB random</option>
             </select>
           </label>
 
@@ -99,6 +100,7 @@
             <select name="method" id="method-decode" required>
               <option value="lsb" {% if method== 'lsb' %}selected{% endif %}>LSB (Least Significant Bit)</option>
               <option value="huffman" {% if method=='huffman' %}selected{% endif %}>Huffman Coding</option>
+              <option value="random_lsb" {% if method=='random_lsb' %}selected{% endif %}>LSB random</option>
             </select>
           </label>
           <label class="field">
