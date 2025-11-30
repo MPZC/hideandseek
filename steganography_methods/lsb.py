@@ -10,7 +10,7 @@ Moduły:
 
 import numpy as np
 from PIL import Image
-from mess_preparation import convertToBinary, convertToString
+from .mess_preparation import convertToBinary, convertToString
 
 class Lsb:
     # Konwertuje obraz do macierzy numpy w celu manipulacji pikselami
@@ -40,7 +40,7 @@ class Lsb:
             elif message[bit] == '1':
                 resized_img[pixel] = resized_img[pixel] | 1   # Ustawienie ostatniego bitu na 1
             else:
-                print("Błąd")
+                print("Error")
             pixel += 1
 
         new_img = resized_img.reshape(shape)
@@ -65,9 +65,13 @@ class Lsb:
             elif resized_img[0, bit] % 2 == 1:
                 size_of_text += '1'
             else:
-                print("Błąd")
+                print("Error")
         size = int(size_of_text, 2)
-        # print(size)
+
+        # Sprawdź, czy rozmiar wiadomości ma sens
+        if size <= 0 or size > img.size - 20:
+            # Brak poprawnie zakodowanej wiadomości
+            return ""
 
         # Odczyt ukrytej wiadomości
         for bit in range(20, 20 + size):
@@ -75,8 +79,6 @@ class Lsb:
                 message += '0'
             elif resized_img[0, bit] % 2 == 1:
                 message += '1'
-            else:
-                print("Błąd")
         return message
 
 
