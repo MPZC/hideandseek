@@ -187,14 +187,32 @@ body {
 }
 
 input[type=file],
+input[type=password],
 select,
 textarea {
     border-radius: 8px;
     padding: 10px;
     border: 1px solid rgba(255,255,255,0.03);
     background: rgba(255,255,255,0.02);
-    color: #fff;
+    color: #e6eef8;
     font-size: 0.95rem;
+}
+
+select {
+    background: rgba(255,255,255,0.03); 
+    color: var(--color-text);
+    border: 1px solid rgba(255,255,255,0.03);
+    border-radius: 8px;
+    padding: 10px 32px 10px 12px; 
+    font-size: 0.95rem;
+    appearance: none;       
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    position: relative;
+}
+select option {
+    background-color: rgba(11,18,32,0.9);
+    color: var(--color-text);
 }
 
 textarea {

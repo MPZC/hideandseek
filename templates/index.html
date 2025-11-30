@@ -43,13 +43,18 @@
           <label class="field">
             <span class="label">Encoding method</span>
             <select name="method" id="method-encode" required>
-              <option value="lsb" selected>LSB (Least Significant Bit)</option>
+              <option value="lsb" {% if method=='lsb' %}selected{% endif %}>LSB (Least Significant Bit)</option>
+              <option value="huffman" {% if method=='huffman' %}selected{% endif %}>Huffman Coding</option>
             </select>
           </label>
 
           <label class="field">
             <span class="label">Secret message</span>
             <textarea name="hidden_message" rows="4" placeholder="Type your secret message..." required></textarea>
+          </label>
+          <label class="field">
+            <span class="label">Passphrase</span>
+            <input type="password" name="passphrase" placeholder="Enter passphrase..." required>
           </label>
 
           <div class="actions">
@@ -92,8 +97,13 @@
           <label class="field">
             <span class="label">Decoding method</span>
             <select name="method" id="method-decode" required>
-              <option value="lsb" selected>LSB (Least Significant Bit)</option>
+              <option value="lsb" {% if method== 'lsb' %}selected{% endif %}>LSB (Least Significant Bit)</option>
+              <option value="huffman" {% if method=='huffman' %}selected{% endif %}>Huffman Coding</option>
             </select>
+          </label>
+          <label class="field">
+            <span class="label">Passphrase</span>
+            <input type="password" name="passphrase" placeholder="Enter passphrase..." required>
           </label>
 
           <div class="actions">
