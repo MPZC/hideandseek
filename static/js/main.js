@@ -1,16 +1,14 @@
-const modeSwitch = document.getElementById('modeSwitch');
-const modeLabel = document.getElementById('modeLabel');
-const encodeSection = document.getElementById('encode-section');
-const decodeSection = document.getElementById('decode-section');
+document.addEventListener("DOMContentLoaded", function () {
+  const switchEl = document.getElementById("modeSwitch");
+  if (!switchEl) return;
 
-modeSwitch.addEventListener('change', () => {
-    if (modeSwitch.checked) {
-        encodeSection.classList.remove('active');
-        decodeSection.classList.add('active');
-        modeLabel.textContent = 'Mode: Decode';
-    } else {
-        decodeSection.classList.remove('active');
-        encodeSection.classList.add('active');
-        modeLabel.textContent = 'Mode: Encode';
+  switchEl.addEventListener("change", function (e) {
+    const mode = switchEl.checked ? "decode" : "encode";
+    const currentSearch = new URLSearchParams(window.location.search);
+    if (currentSearch.get("mode") === mode) {
+      window.location.href = `${window.location.pathname}?mode=${mode}`;
+      return;
     }
+    window.location.href = `${window.location.pathname}?mode=${mode}`;
+  });
 });
