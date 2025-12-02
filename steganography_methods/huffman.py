@@ -3,7 +3,7 @@ import json
 import numpy as np
 from PIL import Image
 from collections import defaultdict
-from mess_preparation import encryptMessage, decryptMessage
+from .mess_preparation import encryptMessage, decryptMessage
 
 class Huffman:
 

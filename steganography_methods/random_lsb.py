@@ -14,7 +14,7 @@ Moduły:
 
 import numpy as np
 from PIL import Image
-from mess_preparation import *
+from .mess_preparation import *
 
 class RandomLsb:
     # Konwertuje obraz na macierz numpy w celu manipulacji pikselami
