@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from flask import Flask, render_template, request, send_file, flash, session, redirect, url_for
 from io import BytesIO
 from werkzeug.utils import secure_filename
