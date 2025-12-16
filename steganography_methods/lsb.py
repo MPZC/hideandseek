@@ -11,12 +11,19 @@ Moduły:
 import numpy as np
 from PIL import Image
 from .mess_preparation import convertToBinary, convertToString
+from exceptions import *
 
 class Lsb:
     # Konwertuje obraz do macierzy numpy w celu manipulacji pikselami
     def convertImage(self, path):
-        img = Image.open(path)
-        numpy_img = np.array(img)
+        try:
+            img = Image.open(path)
+            img.verify() # wykrywa uszkodzone PNG
+            img = Image.open(path)
+            numpy_img = np.array(img)
+        except Exception:
+            raise InvalidImageFormat("Invalid or corrupted image file")
+        
         return img, numpy_img
 
 
@@ -70,8 +77,7 @@ class Lsb:
 
         # Sprawdź, czy rozmiar wiadomości ma sens
         if size <= 0 or size > img.size - 20:
-            # Brak poprawnie zakodowanej wiadomości
-            return ""
+            raise NoHiddenMessage("No hidden message found in image")
 
         # Odczyt ukrytej wiadomości
         for bit in range(20, 20 + size):
@@ -86,7 +92,7 @@ class Lsb:
         message_in_binary = convertToBinary(message, password)
         _, img = self.convertImage(path)
         if len(message_in_binary) > (img.size):
-            raise Exception("The message is too long to encode in this image")
+            raise MessageTooLarge("The message is too long to encode in this image")
         _, stego_img = self.lsbCoding(img, message_in_binary)
         return stego_img
 

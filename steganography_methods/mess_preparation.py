@@ -6,6 +6,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 import os
+from exceptions import *
 
 def convertToBinary(message, password, step=None):
     encrypted_message = encryptMessage(message, password)
@@ -74,13 +75,19 @@ def encryptMessage(message, password):
 
 
 def decryptMessage(encrypted_message, password):
-    encrypted_message += '=' * (-len(encrypted_message) % 4)
-    encrypted_data = base64.urlsafe_b64decode(encrypted_message.encode())
-    salt = encrypted_data[:16]
-    ciphertext = encrypted_data[16:]
-    key = generateKeyFromPassword(password, salt)
-    fernet = Fernet(key)
-    decrypted = fernet.decrypt(ciphertext)
-    return decrypted.decode()
+    try:
+        encrypted_message += '=' * (-len(encrypted_message) % 4)
+        encrypted_data = base64.urlsafe_b64decode(encrypted_message.encode())
+        salt = encrypted_data[:16]
+        ciphertext = encrypted_data[16:]
+        key = generateKeyFromPassword(password, salt)
+        fernet = Fernet(key)
+        decrypted = fernet.decrypt(ciphertext)
+        return decrypted.decode()
+    
+    except Exception:
+        raise InvalidPassword("Invalid password or corrupted data")
+
+
 
 

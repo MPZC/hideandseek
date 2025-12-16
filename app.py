@@ -1,8 +1,9 @@
-from flask import Flask, render_template, request, send_file, flash
+from flask import Flask, render_template, request, send_file, flash, session, redirect, url_for
 from io import BytesIO
-from werkzeug.utils import secure_filename
 from steganography_methods.lsb import Lsb
-from PIL import Image
+from steganography_methods.huffman import Huffman
+from steganography_methods.random_lsb import RandomLsb
+from exceptions import *
 import tempfile
 import os
 
@@ -12,112 +13,157 @@ app.secret_key = "supersecretkey"
 ALLOWED_EXTENSIONS = {"png"}
 MAX_FILE_SIZE_MB = 5
 
-# przechowywanie obrazu w pamięci
-tmp = None
-processed = False
+tmp = None  # przechowuje zakodowany obraz w RAM
 
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.before_request
-def clear_tmp_before_request():
-    """Czyści bufor przed nowym żądaniem GET (z wyjątkiem /download)."""
-    global tmp, processed
-    if request.method == "GET" and request.endpoint not in ["download_file", "static"]:
-        tmp = None
-        processed = False
+def reset_state():
+    global tmp
+    tmp = None
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    global tmp, processed
-    decoded_message = None
-    processed = False
-    mode = "encode"
+    global tmp
 
-    if request.method == "POST":
-        action = request.form.get("action")
-        mode = action
+    # ================== GET ==================
+    if request.method == "GET":
+        mode = request.args.get("mode", "encode")
 
-        if "file" not in request.files:
-            flash("No file", "error")
-            return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
+        # flaga jednorazowa (znika po refreshu)
+        show_encoded = session.pop("encoded_success", False)
+        method = session.pop("method", "lsb")
 
-        file = request.files["file"]
-        if file.filename == "":
-            flash("No file", "error")
-            return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
+        if not show_encoded:
+            reset_state()
 
-        if file and allowed_file(file.filename):
-            file.seek(0, os.SEEK_END)
-            file_size = file.tell() / (1024 * 1024)
-            file.seek(0)
-            if file_size > MAX_FILE_SIZE_MB:
-                flash(f"File too big! Max size: {MAX_FILE_SIZE_MB} MB.", "error")
-                return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
+        decoded_message = session.pop("decoded_message", None)
 
-            lsb = Lsb()
+        return render_template(
+            "index.html",
+            processed=show_encoded,
+            decoded_message=decoded_message,
+            mode=mode,
+            method=method
+        )
 
-            try:
-                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_in:
-                    file.save(tmp_in)
-                    tmp_in_path = tmp_in.name
+    # ================== POST ==================
+    mode = request.form.get("action", "encode")
+    method = request.form.get("method", "lsb")
 
-                if action == "encode":
-                    hidden_message = request.form.get("hidden_message", "").strip()
-                    if not hidden_message:
-                        flash("Message con't be empty", "error")
-                        os.remove(tmp_in_path)
-                        return render_template("index.html", decoded_message=decoded_message, processed=processed, mode=mode)
+    if "file" not in request.files or request.files["file"].filename == "":
+        flash("No file provided.", "error")
+        return redirect(url_for("index", mode=mode))
 
-                    hidden_message = "**" + hidden_message
-                    stego_img = lsb.codeMessageLSB(tmp_in_path, hidden_message)
+    file = request.files["file"]
 
-                    tmp = BytesIO()
-                    stego_img.save(tmp, format="PNG")
-                    tmp.seek(0)
-                    processed = True
+    if not allowed_file(file.filename):
+        flash("Only .png files allowed.", "error")
+        return redirect(url_for("index", mode=mode))
 
-                    flash("Image encoded correctly", "success")
-                    os.remove(tmp_in_path)
+    file.seek(0, os.SEEK_END)
+    if file.tell() / (1024 * 1024) > MAX_FILE_SIZE_MB:
+        flash(f"File too big! Max size: {MAX_FILE_SIZE_MB} MB.", "error")
+        return redirect(url_for("index", mode=mode))
+    file.seek(0)
 
-                elif action == "decode":
-                    decoded_message = lsb.decodeMessageLSB(tmp_in_path).lstrip("*")
+    if method == "lsb":
+        stego_method = Lsb()
+    elif method == "huffman":
+        stego_method = Huffman()
+    elif method == "random_lsb":
+        stego_method = RandomLsb()
+    else:
+        flash("Unknown encoding method.", "error")
+        return redirect(url_for("index", mode=mode))
 
-                    if not decoded_message.strip():
-                        decoded_message = "Nothing was hidden"
-                        flash("Nothing was hidden", "info")
-                    else:
-                        flash("Message decoded correctly.", "success")
+    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_in:
+        file.save(tmp_in)
+        tmp_in_path = tmp_in.name
 
-                    os.remove(tmp_in_path)
+    try:
+        # -------- ENCODE --------
+        if mode == "encode":
+            hidden_message = request.form.get("hidden_message", "").strip()
+            password = request.form.get("passphrase", "").strip()
 
+            if not hidden_message or not password:
+                flash("Message and passphrase cannot be empty.", "error")
+                return redirect(url_for("index", mode="encode"))
 
-            except Exception as e:
-                try:
-                    os.remove(tmp_in_path)
-                except Exception:
-                    pass
-                error_message = str(e) if str(e).strip() else "Unknown decoding error"
-                flash(f"Error: {error_message}", "error")
+            stego_img = stego_method.codeMessage(
+                tmp_in_path,
+                "**" + hidden_message,
+                password
+            )
 
+            tmp = BytesIO()
+            stego_img.save(tmp, format="PNG")
+            tmp.seek(0)
+
+            session["encoded_success"] = True
+            session["method"] = method
+
+            flash(f"Image encoded correctly using {method.upper()}", "success")
+            return redirect(url_for("index", mode="encode"))
+
+        # -------- DECODE --------
         else:
-            flash("Only .png files allowed.", "error")
+            password = request.form.get("passphrase", "").strip()
 
-    return render_template("index.html",
-                           decoded_message=decoded_message,
-                           processed=processed,
-                           mode=mode)
+            if not password:
+                flash("Passphrase can't be empty.", "error")
+                return redirect(url_for("index", mode="decode"))
+
+            decoded = stego_method.decodeMessage(tmp_in_path, password).lstrip("*")
+
+            if not decoded.strip():
+                decoded = "Nothing was hidden"
+                flash("Nothing was hidden", "info")
+            else:
+                flash(f"Message decoded correctly using {method.upper()}", "success")
+
+            session["decoded_message"] = decoded
+            return redirect(url_for("index", mode="decode"))
+
+    except InvalidImageFormat:
+        flash("Invalid or corrupted image file.", "error")
+        return redirect(url_for("index", mode=mode))
+
+    except MessageTooLarge:
+        flash("Image is too small for this message.", "error")
+        return redirect(url_for("index", mode=mode))
+
+    except NoHiddenMessage:
+        flash("No hidden message found in image.", "info")
+        return redirect(url_for("index", mode=mode))
+
+    except InvalidPassword:
+        flash("Wrong passphrase.", "error")
+        return redirect(url_for("index", mode=mode))
+    
+    except Exception as e:
+        flash(f"Error: {str(e) or 'Unknown error'}", "error")
+        return redirect(url_for("index", mode=mode))
+
+    finally:
+        try:
+            os.remove(tmp_in_path)
+        except:
+            pass
 
 
 @app.route("/download")
 def download_file():
     global tmp
+
     if tmp is None:
-        flash("No file to download", "error")
-        return render_template("index.html")
+        flash("No file to download.", "error")
+        return redirect(url_for("index", mode="encode"))
+
     tmp.seek(0)
     return send_file(
         tmp,
@@ -128,7 +174,5 @@ def download_file():
 
 
 if __name__ == "__main__":
-    tmp = None
-    processed = False
-    port = 8080
-    app.run(debug=True, host="0.0.0.0", port=port)
+    reset_state()
+    app.run(debug=True, host="0.0.0.0", port=8080)

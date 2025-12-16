@@ -9,7 +9,6 @@
 </head>
 <body>
 
-  <!-- HEADER -->
   <header class="site-header">
     <div class="header-inner">
       <div class="brand">
@@ -21,11 +20,9 @@
     </div>
   </header>
 
-  <!-- MAIN CONTENT -->
   <main class="page-main">
     <div class="content">
 
-      <!-- MODE SWITCH -->
       <div class="controls">
         <label class="mode">
           <input type="checkbox" id="modeSwitch" aria-label="Toggle mode" {% if mode=="decode" %}checked{% endif %}>
@@ -34,7 +31,6 @@
         <span id="modeLabel">Mode: {{ mode|capitalize }}</span>
       </div>
 
-      <!-- ENCODE PANEL -->
       <section id="encode-section" class="panel {% if mode=="encode" %}active{% endif %}">
         <h2>Encode message</h2>
         <form method="POST" enctype="multipart/form-data" class="form">
@@ -47,13 +43,19 @@
           <label class="field">
             <span class="label">Encoding method</span>
             <select name="method" id="method-encode" required>
-              <option value="lsb" selected>LSB (Least Significant Bit)</option>
+              <option value="lsb" {% if method=='lsb' %}selected{% endif %}>LSB (Least Significant Bit)</option>
+              <option value="huffman" {% if method=='huffman' %}selected{% endif %}>Huffman Coding</option>
+              <option value="random_lsb" {% if method=='random_lsb' %}selected{% endif %}>LSB random</option>
             </select>
           </label>
 
           <label class="field">
             <span class="label">Secret message</span>
             <textarea name="hidden_message" rows="4" placeholder="Type your secret message..." required></textarea>
+          </label>
+          <label class="field">
+            <span class="label">Passphrase</span>
+            <input type="password" name="passphrase" placeholder="Enter passphrase..." required>
           </label>
 
           <div class="actions">
@@ -84,7 +86,6 @@
 
       </section>
 
-      <!-- DECODE PANEL -->
       <section id="decode-section" class="panel {% if mode=="decode" %}active{% endif %}">
         <h2>Decode message</h2>
         <form method="POST" enctype="multipart/form-data" class="form">
@@ -97,8 +98,14 @@
           <label class="field">
             <span class="label">Decoding method</span>
             <select name="method" id="method-decode" required>
-              <option value="lsb" selected>LSB (Least Significant Bit)</option>
+              <option value="lsb" {% if method== 'lsb' %}selected{% endif %}>LSB (Least Significant Bit)</option>
+              <option value="huffman" {% if method=='huffman' %}selected{% endif %}>Huffman Coding</option>
+              <option value="random_lsb" {% if method=='random_lsb' %}selected{% endif %}>LSB random</option>
             </select>
+          </label>
+          <label class="field">
+            <span class="label">Passphrase</span>
+            <input type="password" name="passphrase" placeholder="Enter passphrase..." required>
           </label>
 
           <div class="actions">
@@ -128,7 +135,6 @@
 
       </section>
 
-      <!-- INFO SECTION -->
       <section class="info">
         <h3>How it works</h3>
         <p>
@@ -142,7 +148,6 @@
     </div>
   </main>
 
-  <!-- FOOTER -->
   <footer class="site-footer">
     <div class="footer-inner">
       <img src="{{ url_for('static', filename='images/logo.png') }}" alt="HideAndSeek" class="logo-footer">
