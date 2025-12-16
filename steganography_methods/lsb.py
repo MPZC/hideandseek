@@ -30,7 +30,7 @@ class Lsb:
         size = img.size       # Rozmiar obrazu
         resized_img = img.reshape(size)  # Zmienia macierz obrazu, aby była była jednowymiarowa
         pixel = 0             # Zmienna kontrolująca przesuwanie się po pikselach 
-        for bit in range(0, len(message)-1):
+        for bit in range(0, len(message)):
             if bit >= len(resized_img):
                 new_img = resized_img.reshape(shape)
                 pil_image = Image.fromarray(new_img)
