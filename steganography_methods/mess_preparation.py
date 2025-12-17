@@ -6,13 +6,14 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 import os
+from exceptions import *
 
 def convertToBinary(message, password, step=None):
     encrypted_message = encryptMessage(message, password)
     # print(f"Kodowanie wiadomości: {message}")
     message = "**" + encrypted_message
     table_of_bin = []
-    len_of_message = (len(message)*7)
+    len_of_message = (len(message)*8)
     # print(len_of_message)
     len_of_message_bin = bin(len_of_message)[2:].zfill(20)
     message_in_binary = len_of_message_bin
@@ -24,7 +25,7 @@ def convertToBinary(message, password, step=None):
 
     # Konwersja każdego znaku do formatu binarnego
     for char in message:
-        bin_repr = bin(ord(char))[2:].zfill(7)
+        bin_repr = bin(ord(char))[2:].zfill(8)
         table_of_bin.append(bin_repr)
 
     for b in table_of_bin:
@@ -37,14 +38,14 @@ def convertToString(message_in_binary, password):
     # print(f"Message in binary: {message_in_binary}")
     table_of_strings = []
     message = ""
-    for char in range(0, len(message_in_binary), 7):
-        table_of_strings.append(chr(int(message_in_binary[char:char+7], 2)))
+    for char in range(0, len(message_in_binary), 8):
+        table_of_strings.append(chr(int(message_in_binary[char:char+8], 2)))
 
     for i in table_of_strings:
         message += i
     
     if message[:2] != '**':
-        raise ValueError
+        raise ValueError(f"Niepoprawny nagłówek: {message[:10]!r}")
     
     decrypted_message = decryptMessage(message[2:], password)
 
@@ -74,12 +75,19 @@ def encryptMessage(message, password):
 
 
 def decryptMessage(encrypted_message, password):
-    encrypted_data = base64.urlsafe_b64decode(encrypted_message.encode())
-    salt = encrypted_data[:16]
-    ciphertext = encrypted_data[16:]
-    key = generateKeyFromPassword(password, salt)
-    fernet = Fernet(key)
-    decrypted = fernet.decrypt(ciphertext)
-    return decrypted.decode()
+    try:
+        encrypted_message += '=' * (-len(encrypted_message) % 4)
+        encrypted_data = base64.urlsafe_b64decode(encrypted_message.encode())
+        salt = encrypted_data[:16]
+        ciphertext = encrypted_data[16:]
+        key = generateKeyFromPassword(password, salt)
+        fernet = Fernet(key)
+        decrypted = fernet.decrypt(ciphertext)
+        return decrypted.decode()
+    
+    except Exception:
+        raise InvalidPassword("Invalid password or corrupted data")
+
+
 
 

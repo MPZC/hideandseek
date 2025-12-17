@@ -15,6 +15,7 @@ Moduły:
 import numpy as np
 from PIL import Image
 from .mess_preparation import *
+from exceptions import *
 
 class RandomLsb:
     # Konwertuje obraz na macierz numpy w celu manipulacji pikselami
@@ -33,7 +34,7 @@ class RandomLsb:
         available = img.size - 11
         if (message_size) > available:
             max_chars = available // 7  # bo 7 bitów = 1 znak
-            raise ValueError(
+            raise MessageTooLarge(
                 f"Message is too long for this photo!\n"
                 f"Max message length are: {max_chars} chars ({available} bits), "
                 f"And you try to encode {message_size // 7} chars ({message_size} bits)."
@@ -42,7 +43,7 @@ class RandomLsb:
         step = max(1, available // message_size)
 
         if step > 1023:
-            raise ValueError(
+            raise MessageTooShort(
                 f"The message is too short. The step is {step}, "
                 "the max step is 1024.\n"
                 "Try to use longer message or smaller picture."
