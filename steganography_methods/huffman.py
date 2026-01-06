@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from collections import defaultdict
 from .mess_preparation import encryptMessage, decryptMessage
+from exceptions import *
 
 class Huffman:
 
@@ -83,7 +84,7 @@ class Huffman:
             pixel += 1
 
         if pixel > size:
-            raise ValueError("The message is too long for this picture")
+            raise MessageTooLarge("The message is too long for this picture")
 
         new_img = resized_img.reshape(shape)
         pil_image = Image.fromarray(new_img)

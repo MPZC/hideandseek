@@ -3,6 +3,7 @@ from io import BytesIO
 from steganography_methods.lsb import Lsb
 from steganography_methods.huffman import Huffman
 from steganography_methods.random_lsb import RandomLsb
+from exceptions import *
 import tempfile
 import os
 
@@ -128,6 +129,22 @@ def index():
             session["decoded_message"] = decoded
             return redirect(url_for("index", mode="decode"))
 
+    except InvalidImageFormat:
+        flash("Invalid or corrupted image file.", "error")
+        return redirect(url_for("index", mode=mode))
+
+    except MessageTooLarge:
+        flash("Image is too small for this message.", "error")
+        return redirect(url_for("index", mode=mode))
+
+    except NoHiddenMessage:
+        flash("No hidden message found in image.", "info")
+        return redirect(url_for("index", mode=mode))
+
+    except InvalidPassword:
+        flash("Wrong passphrase.", "error")
+        return redirect(url_for("index", mode=mode))
+    
     except Exception as e:
         flash(f"Error: {str(e) or 'Unknown error'}", "error")
         return redirect(url_for("index", mode=mode))
