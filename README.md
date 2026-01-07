@@ -108,7 +108,7 @@ Aby uruchomić projekt lokalnie, postępuj zgodnie z poniższymi krokami:
 
     ```bash
 
-    python -m venv venv
+    python -m venv .
 
     # Windows:
 
