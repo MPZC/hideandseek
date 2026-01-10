@@ -12,6 +12,7 @@ app.secret_key = "supersecretkey"
 
 ALLOWED_EXTENSIONS = {"png"}
 MAX_FILE_SIZE_MB = 5
+DEFAULT_IMAGE_PATH = os.path.join("static", "images", "logo.png")
 
 tmp = None  # przechowuje zakodowany obraz w RAM
 
@@ -54,21 +55,27 @@ def index():
     mode = request.form.get("action", "encode")
     method = request.form.get("method", "lsb")
 
+    use_default_image = False
+
     if "file" not in request.files or request.files["file"].filename == "":
-        flash("No file provided.", "error")
-        return redirect(url_for("index", mode=mode))
+        if mode == "encode":
+            use_default_image = True
+        else:
+            flash("No file provided.", "error")
+            return redirect(url_for("index", mode=mode))
+    else:
+        file = request.files["file"]
 
-    file = request.files["file"]
+        if not allowed_file(file.filename):
+            flash("Only .png files allowed.", "error")
+            return redirect(url_for("index", mode=mode))
 
-    if not allowed_file(file.filename):
-        flash("Only .png files allowed.", "error")
-        return redirect(url_for("index", mode=mode))
+        file.seek(0, os.SEEK_END)
+        if file.tell() / (1024 * 1024) > MAX_FILE_SIZE_MB:
+            flash(f"File too big! Max size: {MAX_FILE_SIZE_MB} MB.", "error")
+            return redirect(url_for("index", mode=mode))
+        file.seek(0)
 
-    file.seek(0, os.SEEK_END)
-    if file.tell() / (1024 * 1024) > MAX_FILE_SIZE_MB:
-        flash(f"File too big! Max size: {MAX_FILE_SIZE_MB} MB.", "error")
-        return redirect(url_for("index", mode=mode))
-    file.seek(0)
 
     if method == "lsb":
         stego_method = Lsb()
@@ -80,9 +87,12 @@ def index():
         flash("Unknown encoding method.", "error")
         return redirect(url_for("index", mode=mode))
 
-    with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_in:
-        file.save(tmp_in)
-        tmp_in_path = tmp_in.name
+    if use_default_image:
+        tmp_in_path = DEFAULT_IMAGE_PATH
+    else:
+        with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp_in:
+            file.save(tmp_in)
+            tmp_in_path = tmp_in.name
 
     try:
         # -------- ENCODE --------
@@ -150,10 +160,11 @@ def index():
         return redirect(url_for("index", mode=mode))
 
     finally:
-        try:
-            os.remove(tmp_in_path)
-        except:
-            pass
+        if not use_default_image:
+            try:
+                os.remove(tmp_in_path)
+            except:
+                pass
 
 
 @app.route("/download")
