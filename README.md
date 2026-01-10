@@ -52,7 +52,7 @@ To run the project locally, follow the steps below:
 
 ### Requirements
 
-* Python 3.8+
+* Python 3.11
 * pip
 
 ### Steps
@@ -89,6 +89,30 @@ To run the project locally, follow the steps below:
 5. **Open in your browser:**
    Go to: `http://localhost:8080`
 
+## 🐳 Running with Docker (Container)
+
+Besides running the application locally, you can also run **HideAndSeek** using a Docker container.
+
+### Requirements
+
+* Docker
+
+### Run the container
+
+Use the following command to start the application:
+
+```bash
+docker run --rm \
+  -itdp 8080:8080 \
+  ghcr.io/mpzc/hideandseek:latest
+```
+
+After the container starts, open your browser and go to:
+
+`http://localhost:8080`
+
+The container will be automatically removed after stopping the application thanks to the `--rm` flag.
+
 ## 📖 User Guide
 
 ### Encoding (Hiding a Message)
@@ -107,4 +131,3 @@ To run the project locally, follow the steps below:
 3. Select the same method that was used for encoding.
 4. Enter the passphrase used during encoding.
 5. Click **Decode**. If the data is correct, the message will be displayed on the screen.
-
