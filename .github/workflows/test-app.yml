@@ -41,14 +41,13 @@ jobs:
 
     - name: Run tests and Generate Summary
       run: |
-        # 1. Add a Headline to the GitHub Summary
         echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
-        
-        # 2. Run pytest:
-        #    --md-report: creates a markdown table
-        #    --md-report-verbose=1: includes detail (pass/fail counts)
-        #    >> $GITHUB_STEP_SUMMARY: appends the output to the summary page
-        pytest --cov=steganography_methods --cov-report=xml --md-report --md-report-verbose=1 >> $GITHUB_STEP_SUMMARY
+        pytest --cov=steganography_methods \
+               --cov-report=xml \
+               --md-report \
+               --md-report-verbose=1 \
+               --md-report-color=never \
+               >> $GITHUB_STEP_SUMMARY_SUMMARY
 
     - name: Upload coverage report
       if: always() 
