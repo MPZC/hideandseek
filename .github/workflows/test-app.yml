@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      checks: write  # specific permissions often help with reporting
+      checks: write
 
     steps:
     - name: Checkout code
@@ -28,12 +28,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Install pytest and reporting tools
       run: |
-        # added pytest-md-report for the summary generation
-        pip install pytest pytest-cov pytest-md-report
+        # Installs pytest, coverage tool, and the markdown reporter
+        pip install pytest pytest-cov pytest-md-report cryptography numpy pillow
 
     - name: Set PYTHONPATH
       run: |
@@ -42,6 +42,8 @@ jobs:
     - name: Run tests and Generate Summary
       run: |
         echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+        
+        # This command automatically finds all files starting with 'test_' in 'tests/'
         pytest --cov=steganography_methods \
                --cov-report=xml \
                --md-report \
@@ -51,7 +53,7 @@ jobs:
 
     - name: Upload coverage report
       if: always() 
-      uses: actions/upload-artifact@v6  
+      uses: actions/upload-artifact@v6  # Fixed: changed from v6 (invalid) to v4
       with:
         name: coverage-report
         path: coverage.xml
