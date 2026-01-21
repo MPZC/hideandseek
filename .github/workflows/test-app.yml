@@ -27,6 +27,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: Install pytest
+      run: |
+        pip install pytest pytest-cov
+
     - name: Run tests
       run: |
         pytest --cov=steganography_methods --cov-report=xml
