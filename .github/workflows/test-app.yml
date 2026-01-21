@@ -32,7 +32,7 @@ jobs:
         pytest --cov=steganography_methods --cov-report=xml
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v6
       with:
         name: coverage-report
         path: coverage.xml
