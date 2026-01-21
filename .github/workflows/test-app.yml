@@ -47,7 +47,7 @@ jobs:
                --md-report \
                --md-report-verbose=1 \
                --md-report-color=never \
-               >> $GITHUB_STEP_SUMMARY_SUMMARY
+               >> $GITHUB_STEP_SUMMARY
 
     - name: Upload coverage report
       if: always() 
