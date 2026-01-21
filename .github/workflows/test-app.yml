@@ -12,6 +12,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write  # specific permissions often help with reporting
 
     steps:
     - name: Checkout code
@@ -27,20 +30,29 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    - name: Install pytest
+    - name: Install pytest and reporting tools
       run: |
-        pip install pytest pytest-cov
+        # added pytest-md-report for the summary generation
+        pip install pytest pytest-cov pytest-md-report
 
     - name: Set PYTHONPATH
       run: |
         echo "PYTHONPATH=$(pwd)" >> $GITHUB_ENV
 
-    - name: Run tests
+    - name: Run tests and Generate Summary
       run: |
-        pytest --cov=steganography_methods --cov-report=xml
+        # 1. Add a Headline to the GitHub Summary
+        echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+        
+        # 2. Run pytest:
+        #    --md-report: creates a markdown table
+        #    --md-report-verbose=1: includes detail (pass/fail counts)
+        #    >> $GITHUB_STEP_SUMMARY: appends the output to the summary page
+        pytest --cov=steganography_methods --cov-report=xml --md-report --md-report-verbose=1 >> $GITHUB_STEP_SUMMARY
 
     - name: Upload coverage report
-      uses: actions/upload-artifact@v6
+      if: always() 
+      uses: actions/upload-artifact@v6  
       with:
         name: coverage-report
         path: coverage.xml
