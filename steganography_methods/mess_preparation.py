@@ -45,7 +45,7 @@ def convertToString(message_in_binary, password):
         message += i
     
     if message[:2] != '**':
-        raise ValueError(f"Niepoprawny nagłówek: {message[:10]!r}")
+        raise ValueError(f"Wrong file format")
     
     decrypted_message = decryptMessage(message[2:], password)
 
