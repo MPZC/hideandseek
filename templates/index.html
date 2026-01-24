@@ -36,6 +36,8 @@
         <form method="POST" enctype="multipart/form-data" class="form">
           
           <label class="field">
+            <span class="label">Choose image</span>
+            <input type="file" name="file" accept="image/*">
             <div style="display: flex; justify-content: space-between; align-items: baseline;">
                 <span class="label">Choose PNG image</span>
                 <span class="label" style="font-size: 0.8em; opacity: 0.6;">Optional</span>
@@ -99,8 +101,8 @@
         <form method="POST" enctype="multipart/form-data" class="form">
 
           <label class="field">
-            <span class="label">Choose PNG image</span>
-            <input type="file" name="file" accept=".png" required>
+            <span class="label">Choose image</span>
+            <input type="file" name="file" accept="image/*" required>
           </label>
 
           <label class="field">
@@ -146,11 +148,10 @@
       <section class="info">
         <h3>How it works</h3>
         <p>
-          HideAndSeek uses steganography to embed short messages inside PNG images. 
+          HideAndSeek uses steganography to embed short messages inside images. 
           Select an image, type your secret message and press <em>Encode</em>. 
           To read hidden messages use <em>Decode</em>.
         </p>
-        <p class="small">Only PNG files are allowed.</p>
       </section>
 
     </div>

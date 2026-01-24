@@ -10,7 +10,7 @@ import os
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-ALLOWED_EXTENSIONS = {"png"}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "bmp", "gif", "webp", "tiff", "ico", "tga", "ppm", "pgm"}
 MAX_FILE_SIZE_MB = 5
 DEFAULT_IMAGE_PATH = os.path.join("static", "images", "logo.png")
 
