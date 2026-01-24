@@ -67,7 +67,7 @@ def index():
         file = request.files["file"]
 
         if not allowed_file(file.filename):
-            flash("Wrong file format.", "error")
+            flash("Only .png files allowed.", "error")
             return redirect(url_for("index", mode=mode))
 
         file.seek(0, os.SEEK_END)
